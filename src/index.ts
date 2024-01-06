@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 
 import { app } from "./app";
-import connectDB from "./db";
+import connectDB from "./config/db";
 import { PORT } from "./config";
 
 dotenv.config({

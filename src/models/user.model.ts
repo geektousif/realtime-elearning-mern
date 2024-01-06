@@ -10,33 +10,13 @@ import {
   REFRESH_TOKEN_EXPIRY,
   REFRESH_TOKEN_SECRET,
 } from "../config";
+import { IUser } from "../types/model-interfaces";
 
 const documentName = "User";
 
-interface User {
-  _id: Schema.Types.ObjectId;
-  username: string;
-  email: string;
-  fullName?: string;
-  dob: Date;
-  password: string;
-  role?: string;
-  photo?: string;
-  verified?: boolean;
-  emailVerificationToken?: string;
-  emailVerificationExpiry?: Date;
-  forgotPasswordToken?: string;
-  forgotPasswordExpiry?: Date;
-  refreshToken?: string;
+// TODO separate types in another file/folder
 
-  age?: number;
-
-  isPasswordCorrect(enteredPassword: string): Promise<boolean>;
-  generateAccessToken(): string;
-  generateRefreshToken(): string;
-}
-
-const userSchema = new Schema<User>(
+const userSchema = new Schema<IUser>(
   {
     username: {
       type: String,
@@ -70,9 +50,8 @@ const userSchema = new Schema<User>(
     },
     // LATER: implement same user multiple role
     role: {
-      type: String,
-      enum: Object.values(AuthRoles),
-      default: AuthRoles.STUDENT,
+      type: Schema.Types.ObjectId,
+      ref: "Role",
     },
     photo: String, // TODO Make it required after implementing upload
     verified: Boolean,
@@ -123,7 +102,7 @@ userSchema.methods.generateAccessToken = function () {
   );
 };
 
-userSchema.methods.generateRefreshToken = function () {
+userSchema.methods.generateRefreshToken = async function () {
   const refreshToken = jwt.sign(
     {
       _id: this._id,
@@ -133,8 +112,13 @@ userSchema.methods.generateRefreshToken = function () {
   );
 
   this.refreshToken = refreshToken;
-
-  return refreshToken;
+  try {
+    await this.save();
+    return refreshToken;
+  } catch (error) {
+    console.error("Error saving the refresh token:", error);
+    throw error;
+  }
 };
 
 userSchema.methods.generateForgotPasswordToken = function () {
@@ -176,4 +160,4 @@ userSchema.virtual("age").get(function () {
   return age;
 });
 
-export const User = model<User>(documentName, userSchema);
+export const User = model<IUser>(documentName, userSchema);
