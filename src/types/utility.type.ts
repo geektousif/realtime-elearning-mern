@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { IUser } from "./model-interfaces";
+import { IUser } from "./models.type";
 
 export interface TokenPayload {
   _id: string;
@@ -10,4 +10,11 @@ export interface TokenPayload {
 
 export interface CustomRequest extends Request {
   user?: IUser;
+}
+
+export interface mailOptionsType {
+  email?: string;
+  subject?: string;
+  text?: string;
+  html?: string;
 }

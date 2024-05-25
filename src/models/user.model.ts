@@ -3,14 +3,14 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
-import { AuthRoles } from "../constants/enums";
+// import { AuthRoles } from "../constants/enums";
 import {
   ACCESS_TOKEN_EXPIRY,
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_EXPIRY,
   REFRESH_TOKEN_SECRET,
-} from "../config";
-import { IUser } from "../types/model-interfaces";
+} from "../config/env.config";
+import { IUser } from "../types/models.type";
 
 const documentName = "User";
 
@@ -53,8 +53,11 @@ const userSchema = new Schema<IUser>(
       type: Schema.Types.ObjectId,
       ref: "Role",
     },
-    photo: String, // TODO Make it required after implementing upload
-    verified: Boolean,
+    // photo: String, // TODO Make it required after implementing upload
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
     emailVerificationToken: String,
     emailVerificationExpiry: Date,
     forgotPasswordToken: String,
@@ -121,7 +124,7 @@ userSchema.methods.generateRefreshToken = async function () {
   }
 };
 
-userSchema.methods.generateForgotPasswordToken = function () {
+userSchema.methods.generateForgotPasswordToken = async function () {
   const forgotToken = crypto.randomBytes(32).toString("hex");
 
   this.forgotPasswordToken = crypto
@@ -130,20 +133,44 @@ userSchema.methods.generateForgotPasswordToken = function () {
     .digest("base64");
   this.forgotPasswordExpiry = Date.now() + 30 * 60 * 1000;
 
+  try {
+    await this.save();
+  } catch (error) {
+    console.error("Error saving the forgot password token:", error);
+    throw error;
+  }
+
   return forgotToken;
 };
 
-userSchema.methods.generateEmailVerificationToken = function () {
+userSchema.methods.generateEmailVerificationToken = async function () {
   const emailToken = crypto.randomBytes(20).toString("hex");
 
   this.emailVerificationToken = emailToken;
   this.emailVerificationExpiry = Date.now() + 30 * 60 * 1000;
 
+  try {
+    await this.save();
+  } catch (error) {
+    console.error("Error saving the verification token:", error);
+    throw error;
+  }
+
   return emailToken;
 };
 
-userSchema.methods.emailVerified = function () {
-  this.verified = true;
+userSchema.methods.emailVerified = async function () {
+  this.isVerified = true;
+
+  this.emailVerificationToken = undefined;
+  this.emailVerificationExpiry = undefined;
+
+  try {
+    await this.save();
+  } catch (error) {
+    console.error("Error verifying user:", error);
+    throw error;
+  }
 };
 
 userSchema.virtual("age").get(function () {

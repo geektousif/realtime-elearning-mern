@@ -3,12 +3,27 @@ import { User } from "../models/user.model";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import asyncHandler from "../utils/asyncHandler";
-import { REFRESH_TOKEN_SECRET } from "../config";
+import { REFRESH_TOKEN_SECRET } from "../config/env.config";
+import { emailVerficationMail } from "../utils/emailTemplates";
+import mailService from "../helpers/sendMail.helper";
+import { IUser } from "../types/models.type";
 
 const cookieOptions = {
   httpOnly: true,
   secure: true,
 };
+
+// const sendVerificationMail = asyncHandler(async (req, res) => {
+//   const createdUser = await User.findById(req.user?._id);
+
+//   if (!createdUser) {
+//     throw new ApiError(500, "Something went wrong");
+//   }
+
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(200, {}, "Verification Email sent."));
+// });
 
 /*********************************
  * @REGISTER
@@ -55,7 +70,25 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while registering the user");
   }
 
-  console.log(createdUser);
+  // TODO Email Verification Mail
+  const verifyToken = await createdUser.generateEmailVerificationToken();
+  const verifyUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/api/v1/users/verify/${verifyToken}`;
+  const verifyEmailMessage = emailVerficationMail(verifyUrl);
+
+  try {
+    await mailService({
+      email: createdUser.email,
+      subject: verifyEmailMessage.subject,
+      html: verifyEmailMessage.html,
+    });
+  } catch (error) {
+    console.log("Can't send verification mail ", error);
+    throw new ApiError(500, "Can't send verification mail");
+  }
+
+  // console.log(createdUser);
   return res
     .status(201)
     .json(new ApiResponse(200, user, "User Registered Successfully"));
@@ -90,6 +123,14 @@ const login = asyncHandler(async (req, res) => {
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Invalid Credentials");
   }
+
+  // TODO build a middleware for verification purpose (if need felt)
+  // if (!user.isVerified) {
+  //   throw new ApiError(
+  //     400,
+  //     "Email is not verified. Please verify your mail using the mail sent to your email address."
+  //   );
+  // }
 
   const accessToken = user.generateAccessToken();
   const refreshToken = await user.generateRefreshToken();
@@ -163,4 +204,62 @@ const refreshToken = asyncHandler(async (req, res) => {
   }
 });
 
-export { registerUser, login, logout, refreshToken };
+// TODO forgot password
+// TODO change password
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    throw new ApiError(400, "Please provide both passwords");
+  }
+
+  const user = await User.findById(req.user?._id);
+
+  const isCurrentPasswordCorrect =
+    await user?.isPasswordCorrect(currentPassword);
+
+  if (!isCurrentPasswordCorrect) {
+    throw new ApiError(400, "Wrong Current Password");
+  }
+
+  user!.password = newPassword;
+
+  await user?.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password Changed Successfully"));
+});
+
+// TODO email verify
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { verifyToken: token } = req.params;
+
+  const user = await User.findOne({
+    emailVerificationToken: token,
+    emailVerificationExpiry: {
+      $gt: Date.now(),
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(400, "Token invalid or Expired");
+  }
+
+  await user.emailVerified();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "User verified Successfully"));
+});
+
+// TODO forogt password controller
+
+export {
+  registerUser,
+  login,
+  logout,
+  refreshToken,
+  changePassword,
+  verifyEmail,
+};

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { CustomRequest } from "../types/controller-helpers";
+import { CustomRequest } from "../types/utility.type";
+import logger from "../config/logger.config";
 
 type AsyncFunction = (
   req: CustomRequest,
@@ -9,7 +10,10 @@ type AsyncFunction = (
 
 const asyncHandler = (asyncFunction: AsyncFunction) => {
   return (req: CustomRequest, res: Response, next: NextFunction) => {
-    Promise.resolve(asyncFunction(req, res, next)).catch((err) => next(err));
+    Promise.resolve(asyncFunction(req, res, next)).catch((err) => {
+      logger.error(err || "Something Went Wrong");
+      next(err);
+    });
   };
 };
 

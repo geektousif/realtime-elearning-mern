@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
-import { ACCESS_TOKEN_SECRET } from "../config";
+import { ACCESS_TOKEN_SECRET } from "../config/env.config";
 import { User } from "../models/user.model";
 import { ApiError } from "../utils/ApiError";
 import asyncHandler from "../utils/asyncHandler";
-import { TokenPayload, CustomRequest } from "../types/controller-helpers";
+import { TokenPayload, CustomRequest } from "../types/utility.type";
 
 const auth = asyncHandler(async (req, res, next) => {
   try {

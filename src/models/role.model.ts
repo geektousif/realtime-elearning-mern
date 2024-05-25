@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 import { AccessTypes, ProjectSections } from "../constants/enums";
-import { IRole, IPermission } from "../types/model-interfaces";
+import { IRole, IPermission } from "../types/models.type";
 
 // ROLE SCHEMA ======
 const roleDocumentName = "Role";
@@ -20,12 +20,17 @@ const roleSchema = new Schema<IRole>({
 });
 
 export const Role = model<IRole>(roleDocumentName, roleSchema);
-// === =====//
+// =========//
 
 // ============ PERMISSION SCHEMA
 const permissionDocumentName = "Permission";
 
 const permissionSchema = new Schema<IPermission>({
+  name: {
+    type: String,
+    unique: true,
+    required: true,
+  },
   accessType: {
     type: String,
     enum: Object.values(AccessTypes),
