@@ -35,10 +35,11 @@ const cookieOptions = {
 
 const registerUser = asyncHandler(async (req, res) => {
   // TODO implement standard validator
-  const { username, email, fullName, dob, password, roleId } = req.body;
+  const { username, email, fullName, dob, password, role } = req.body;
 
   if (
-    [username || email || fullName || dob || password].some(
+    // [username || email || fullName || dob || password].some(
+    [username || email || fullName || password].some(
       (field) => field?.trim() === ""
     )
   ) {
@@ -59,9 +60,9 @@ const registerUser = asyncHandler(async (req, res) => {
     username,
     email,
     fullName,
-    dob,
+    // dob,
     password,
-    role: roleId,
+    role,
   });
 
   const createdUser = await User.findById(user._id)?.select("-password");

@@ -3,6 +3,12 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import asyncHandler from "../utils/asyncHandler";
 
+/**
+ * @route POST /api/v1/categories
+ * @desc Create a category
+ * @access Private
+ * @returns Category
+ */
 const createCategory = asyncHandler(async (req, res) => {
   const { name } = req.body;
   const category = await Category.create({ name });

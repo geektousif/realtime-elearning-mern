@@ -3,13 +3,14 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
-// import { AuthRoles } from "../constants/enums";
+import { AuthRoles } from "../constants/enums";
 import {
   ACCESS_TOKEN_EXPIRY,
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_EXPIRY,
   REFRESH_TOKEN_SECRET,
 } from "../config/env.config";
+
 import { IUser } from "../types/models.type";
 
 const documentName = "User";
@@ -41,7 +42,7 @@ const userSchema = new Schema<IUser>(
     },
     dob: {
       type: Date,
-      required: [true, "Date of Birth is required"],
+      // required: [true, "Date of Birth is required"],
     },
     password: {
       type: String,
@@ -49,11 +50,21 @@ const userSchema = new Schema<IUser>(
       select: false,
     },
     // LATER: implement same user multiple role
+    // role: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: "Role",
+    // },
+
     role: {
-      type: Schema.Types.ObjectId,
-      ref: "Role",
+      type: String,
+      enum: Object.values(AuthRoles),
+      default: AuthRoles.STUDENT,
+      required: true,
     },
-    // photo: String, // TODO Make it required after implementing upload
+
+    // photo: String;
+    // TODO Make it required after implementing upload
+
     isVerified: {
       type: Boolean,
       default: false,

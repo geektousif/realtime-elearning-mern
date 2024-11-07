@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "ts-watch": "tsc --watch",
-    "serve": "nodemon -r dotenv/config --experimental-json-modules dist/index.js",
+    "serve": "nodemon dist/index.js",
     "dev": "concurrently \"npm run ts-watch\"  \"npm run serve\""
   },
   "author": "",
@@ -26,7 +26,7 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",

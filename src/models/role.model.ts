@@ -1,3 +1,5 @@
+// NOT USING FOR THE MOMENT
+
 import { Schema, model } from "mongoose";
 import { AccessTypes, ProjectSections } from "../constants/enums";
 import { IRole, IPermission } from "../types/models.type";

@@ -21,7 +21,7 @@ export interface IUser {
   fullName?: string;
   dob: Date;
   password: string;
-  role?: string;
+  role: string;
   // photo?: string;
   isVerified?: boolean;
   emailVerificationToken?: string;
